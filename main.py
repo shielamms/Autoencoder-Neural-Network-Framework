@@ -2,10 +2,10 @@ import data_loader as dat
 import data_loader_nordic_runes as runes_data
 from autoencoder_viz import Printer as NN_Visualizer
 from nn_framework import (
-	framework,
-	layer,
-	activation,
-	error_function
+    framework,
+    layer,
+    activation,
+    error_function
 )
 
 # Load the data
@@ -30,21 +30,21 @@ learning_rate = 0.001
 # Build the model without the output layer yet because it is not a Dense layer.
 # The number of outputs of one layer is the number of nodes of the next layer.
 for i_layer in range(len(n_nodes) - 1):
-	model.append(
-		layer.Dense(n_nodes[i_layer],
-					n_nodes[i_layer+1],
-					activation.Tanh,
-					# activation.Logistic	# alternative activation function
-					learning_rate=learning_rate,
-		)
-	)
+    model.append(
+        layer.Dense(n_nodes[i_layer],
+                    n_nodes[i_layer+1],
+                    activation.Tanh,
+                    # activation.Logistic    # alternative activation function
+                    learning_rate=learning_rate,
+        )
+    )
 
 autoencoder = framework.ANN(
-	model=model,
-	input_pixel_range=input_pixel_range,
-	error_func=error_function.AbsErr,
-	visualizer=NN_Visualizer(input_shape=sample.shape),
-	# error_func=error_function.SqrErr	# alternative error function
+    model=model,
+    input_pixel_range=input_pixel_range,
+    error_func=error_function.AbsErr,
+    visualizer=NN_Visualizer(input_shape=sample.shape),
+    # error_func=error_function.SqrErr    # alternative error function
 )
 autoencoder.train(training_set)
 autoencoder.evaluate(evaluation_set)
