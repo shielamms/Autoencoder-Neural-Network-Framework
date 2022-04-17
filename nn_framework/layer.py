@@ -4,6 +4,7 @@ class Dense():
     def __init__(self, m_inputs, n_outputs, activation, learning_rate=0.001):
         self.m_inputs = int(m_inputs)
         self.n_outputs = int(n_outputs)
+
         # set initial random weights between -1 and 1
         self.weights = (np.random.sample(
                             size=(self.m_inputs+1, self.n_outputs))
@@ -12,6 +13,10 @@ class Dense():
         self.y = np.zeros((1, self.n_outputs))
         self.activation = activation
         self.learning_rate = learning_rate
+        self.regularizers = []
+
+    def add_regularizer(self, new_regularizer):
+        self.regularizers.append(new_regularizer)
 
     def forward_propagate(self, inputs):
         # Include the bias node in the forward propagation
@@ -31,5 +36,20 @@ class Dense():
         # adjust the weights to minimise the error
         self.weights -= de_dw * self.learning_rate
 
+        # regulirize the weights:
+        # L2 - penalize large weights
+        # L1 - gradually regularize towards 0
+        for regularizer in self.regularizers:
+            self.weights = regularizer.update(self)
+
         de_dx = (de_dy * dy_dv) @ self.weights.transpose()
         return de_dx[:,:-1]
+
+
+
+
+
+
+
+
+
