@@ -18,33 +18,39 @@ print('Shape of input data:', sample.shape)
 # the size of an input image, and the number of output nodes is the same.
 # Set an arbitary number of hidden layers each with an arbitrary number of nodes
 n_pixels = sample.shape[0] * sample.shape[1]
-n_inputs = n_outputs = n_pixels
+n_outputs = n_pixels
 n_hidden_nodes = [41]  # for nordic runes data
-# n_hidden_nodes = [24]
-n_nodes = [n_inputs] + n_hidden_nodes + [n_outputs]
-model = []
 
-input_pixel_range = (0, 1)  # pixel values are from 0 to 1
-learning_rate = 0.001
+# specify only the number of hidden and output nodes, infer the input nodes
+n_nodes = n_hidden_nodes + [n_outputs]
+model = []
 dropout_rates = [0.2, 0.5] # 0.2 on input layer, 0.5 on hidden layer
 
-# Build the model without the output layer yet because it is not a Dense layer.
-# The number of outputs of one layer is the number of nodes of the next layer.
-for i_layer in range(len(n_nodes) - 1):
+# The first layer is a Normalization layer
+model.append(layer.RangeNormalization(training_set)) # infer the input range
+
+print('Number of layers: ', len(n_nodes))
+
+# The middle layers are fully connected layers
+for i_layer in range(len(n_nodes)):
+    # infer the number of input nodes based on the given number of output nodes
     new_layer = layer.Dense(n_nodes[i_layer],
-                            n_nodes[i_layer+1],
                             activation.Tanh,
-                            learning_rate=learning_rate,
-                            dropout_rate=dropout_rates[i_layer])
+                            previous_layer=model[-1],
+                            # dropout_rate=dropout_rates[i_layer]
+    )
     new_layer.add_regularizer(L1())
-    new_layer.add_regularizer(L2())
-    new_layer.add_regularizer(Limit(1.0))
+    # new_layer.add_regularizer(L2())
+    new_layer.add_regularizer(Limit(4.0))
     model.append(new_layer)
+
+# The last layer is a Difference layer (difference between last layer and
+# first layer)
+model.append(layer.Difference(model[-1], model[0]))
 
 autoencoder = framework.ANN(
     model=model,
-    input_pixel_range=input_pixel_range,
-    error_func=error_function.AbsErr,
+    error_func=error_function.SqrErr,
     visualizer=NN_Visualizer(input_shape=sample.shape)
 )
 autoencoder.train(training_set)

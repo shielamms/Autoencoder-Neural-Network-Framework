@@ -1,17 +1,17 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import os
+plt.switch_backend("agg")
+
 
 class ANN():
     def __init__(self,
                  model,
-                 input_pixel_range=(-1,1),
                  error_func=None,
                  visualizer=None):
         self.model = model
         self.n_iter_train = int(8e5)
         self.n_iter_evaluate = int(2e5)
-        self.input_pixel_range = input_pixel_range
 
         # reporting
         self.errors = []
@@ -33,29 +33,31 @@ class ANN():
 
     def train(self, training_set):
         for i in range(self.n_iter_train):
-            x = next(training_set()).ravel() # flatten the 2D input to 1D
-            x = self.normalize(x)
+            # flatten the 2D input to 1D; normalization is done in the
+            # Normalization layer
+            x = next(training_set()).ravel()
             y = self.forward_propagate(x)
-            error = self.error_func.calc(x, y)
-            error = (np.mean(error**2))**0.5    # root mean square
-            error_derivative = self.error_func.calc_derivative(x, y)
+
+            # Instead of calculating the error in this layer,
+            # use the Difference layer for error implementation
+            error = self.error_func.calc(y)
+            error_derivative = self.error_func.calc_derivative(y)
+
             self.errors.append(error)
+            self.back_propagate(error_derivative)
 
             if (i+1) % self.report_interval == 0:
                 self.report()
                 self.visualizer.render(self, x, 'train_iter'+str(i))
 
-            self.back_propagate(error_derivative)
-
     def evaluate(self, evaluation_set):
         for i in range(self.n_iter_evaluate):
             x = next(evaluation_set()).ravel() # flatten the 2D input to 1D
-            x = self.normalize(x)
             y = self.forward_propagate(x, is_evaluation=True)
-            error = self.error_func.calc(x, y)
+            error = self.error_func.calc(y)
             self.errors.append(error)
 
-            if i % self.report_interval == 0:
+            if (i+1) % self.report_interval == 0:
                 self.report()
                 self.visualizer.render(self, x, 'eval_iter'+str(i))
 
@@ -74,29 +76,50 @@ class ANN():
         scale_factor = max_val - min_val
         return (transformed_values + 0.5) * (scale_factor + min_val)
 
-    def forward_propagate(self, x, is_evaluation=False):
-        y = x.ravel()[np.newaxis, :] # ravel(): flatten to a single row
+    def forward_propagate(self,
+                          x,
+                          is_evaluation=False,
+                          i_start_layer=None,
+                          i_stop_layer=None):
+        if i_start_layer is None:
+            i_start_layer = 0
+        if i_stop_layer is None:
+            i_stop_layer = len(self.model)
+        if i_start_layer >= i_stop_layer:
+            return x
+
+        # Reset all layers for the next iteration
         for layer in self.model:
-            y = layer.forward_propagate(y, is_evaluation)
-        return y.ravel()
+            layer.reset()
 
-    def forward_propagate_to_layer(self, x, i_layer):
-        y = x.ravel()[np.newaxis, :] # ravel(): flatten to a single row
-        for layer in self.model[:i_layer]:
-            y = layer.forward_propagate(y)
-        return y.ravel()
+        # Flatten the start layer to a single 2D array
+        # ravel(): flatten to a single row
+        self.model[i_start_layer].x += x.ravel()[np.newaxis, :]
 
-    def forward_propagate_from_layer(self, x, i_layer):
-        y = x.ravel()[np.newaxis, :] # ravel(): flatten to a single row
-        for layer in self.model[i_layer:]:
-            y = layer.forward_propagate(y)
-        return y.ravel()
+        for layer in self.model[i_start_layer: i_stop_layer]:
+            layer.forward_propagate(is_evaluation=is_evaluation)
+
+        # Return the output of the stop layer
+        return layer.y.ravel()
+
+    # Implement all forward_propagate acitivities into a single function above
+    # def forward_propagate_to_layer(self, x, i_layer):
+    #     y = x.ravel()[np.newaxis, :] # ravel(): flatten to a single row
+    #     for layer in self.model[:i_layer]:
+    #         y = layer.forward_propagate(y)
+    #     return y.ravel()
+
+    # def forward_propagate_from_layer(self, x, i_layer):
+    #     y = x.ravel()[np.newaxis, :] # ravel(): flatten to a single row
+    #     for layer in self.model[i_layer:]:
+    #         y = layer.forward_propagate(y)
+    #     return y.ravel()
 
     def back_propagate(self, de_dy):
-        # Iterate through the layers backwards and propagate from end to start
-        for i, layer in enumerate(self.model[::-1]):
-            de_dx = layer.back_propagate(de_dy)
-            de_dy = de_dx
+        self.model[-1].de_dy += de_dy
+
+        for layer in self.model[::-1]:
+            layer.back_propagate()
 
     def report(self):
         n_bins = int(len(self.errors) // self.report_bin_size)
