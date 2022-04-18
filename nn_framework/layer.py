@@ -1,4 +1,5 @@
 import numpy as np
+from .optimizers import SGD
 
 
 class GenericLayer():
@@ -28,6 +29,7 @@ class Dense(GenericLayer):
                  n_outputs,
                  activation,
                  previous_layer=None,
+                 optimizer=None,
                  dropout_rate=0,
                  ):
         self.type = 'Dense'
@@ -37,7 +39,11 @@ class Dense(GenericLayer):
         self.activation = activation
         self.dropout_rate = dropout_rate
 
-        self.learning_rate = 0.001  # hardcoded for now
+        if not optimizer:
+            self.optimizer = SGD(learning_rate=0.001)
+        else:
+            self.optimizer = optimizer
+
 
         # set initial random weights between -1 and 1
         self.weights = (np.random.sample(
@@ -91,16 +97,21 @@ class Dense(GenericLayer):
         dv_dx = self.weights.transpose()
 
         dy_dw = dv_dw @ dy_dv
-        de_dw = self.de_dy * dy_dw
+        self.de_dw = self.de_dy * dy_dw
 
-        # adjust the weights to minimise the error
-        self.weights -= de_dw * self.learning_rate
-
-        # regulirize the weights:
+        # regularize the weights:
         # L2 - penalize large weights
         # L1 - gradually regularize towards 0
+        # Use L1 and L2 before optimization because they operate on the gradient
         for regularizer in self.regularizers:
-            self.weights = regularizer.update(self)
+            regularizer.pre_optim_update(self)
+
+        self.optimizer.update(self)
+
+        # Use the Limit regularizer after optimization since it operates
+        # on the weights
+        for regularizer in self.regularizers:
+            regularizer.post_optim_update(self)
 
         self.de_dx = (self.de_dy * dy_dv) @ dv_dx
 
@@ -171,10 +182,3 @@ class Difference(GenericLayer):
     def back_propagate(self):
         self.previous_layer.de_dy += self.de_dy
         self.diff_layer.de_dy -= self.de_dy
-
-
-
-
-
-
-

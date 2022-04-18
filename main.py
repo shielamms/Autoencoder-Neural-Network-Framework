@@ -3,10 +3,11 @@ import data_loader_nordic_runes as runes_data
 from autoencoder_viz import Printer as NN_Visualizer
 from nn_framework import (
     framework,
-    layer,
     activation,
     error_function
 )
+from nn_framework.layer import Dense, Difference, RangeNormalization
+from nn_framework.optimizers import SGD, Momentum, Adam
 from nn_framework.regularization import L1, L2, Limit
 
 # Load the data
@@ -27,17 +28,18 @@ model = []
 dropout_rates = [0.2, 0.5] # 0.2 on input layer, 0.5 on hidden layer
 
 # The first layer is a Normalization layer
-model.append(layer.RangeNormalization(training_set)) # infer the input range
+model.append(RangeNormalization(training_set)) # infer the input range
 
 print('Number of layers: ', len(n_nodes))
 
 # The middle layers are fully connected layers
 for i_layer in range(len(n_nodes)):
     # infer the number of input nodes based on the given number of output nodes
-    new_layer = layer.Dense(n_nodes[i_layer],
-                            activation.Tanh,
-                            previous_layer=model[-1],
-                            # dropout_rate=dropout_rates[i_layer]
+    new_layer = Dense(n_nodes[i_layer],
+                      activation.Tanh,
+                      previous_layer=model[-1],
+                      optimizer=Momentum(),
+                      # dropout_rate=dropout_rates[i_layer]
     )
     new_layer.add_regularizer(L1())
     # new_layer.add_regularizer(L2())
@@ -46,7 +48,7 @@ for i_layer in range(len(n_nodes)):
 
 # The last layer is a Difference layer (difference between last layer and
 # first layer)
-model.append(layer.Difference(model[-1], model[0]))
+model.append(Difference(model[-1], model[0]))
 
 autoencoder = framework.ANN(
     model=model,
