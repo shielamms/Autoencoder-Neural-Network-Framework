@@ -1,4 +1,5 @@
 import numpy as np
+from .initializers import Glorot
 from .optimizers import SGD
 
 
@@ -28,6 +29,7 @@ class Dense(GenericLayer):
     def __init__(self,
                  n_outputs,
                  activation,
+                 initializer=None,
                  previous_layer=None,
                  optimizer=None,
                  dropout_rate=0,
@@ -37,17 +39,22 @@ class Dense(GenericLayer):
         self.n_outputs = int(n_outputs)
         self.m_inputs = self.previous_layer.y.size # infer number of input nodes
         self.activation = activation
+        self.initializer = initializer
         self.dropout_rate = dropout_rate
+
+        if not initializer:
+            self.initializer = Glorot()
+        else:
+            self.initializer = initializer
 
         if not optimizer:
             self.optimizer = SGD(learning_rate=0.001)
         else:
             self.optimizer = optimizer
 
-
-        # set initial random weights between -1 and 1
-        self.weights = (np.random.sample(
-                            size=(self.m_inputs+1, self.n_outputs)) * 2 - 1)
+        # Use an Initializer object to set the initial weights;
+        # Add the bias node to the initializer inputs
+        self.weights = initializer.initialize(self.m_inputs+1, self.n_outputs)
 
         self.regularizers = []
         self.reset()

@@ -4,6 +4,7 @@ import data_loader_nordic_runes as runes_data
 from nn_framework.activation import Tanh
 from nn_framework.error_function import SqrErr
 from nn_framework.framework import ANN
+from nn_framework.initializers import Glorot
 from nn_framework.layer import Dense, Difference, RangeNormalization
 from nn_framework.optimizers import Momentum
 from nn_framework.regularization import L1, Limit
@@ -20,6 +21,7 @@ model.append(RangeNormalization(training_set)) # infer the input range
 for i_layer in range(len(n_nodes)):
     new_layer = Dense(n_nodes[i_layer],
                       activation=Tanh,
+                      initializer=Glorot(),
                       previous_layer=model[-1],
                       optimizer=Momentum(),
     )
