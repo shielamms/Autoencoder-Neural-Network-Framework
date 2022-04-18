@@ -26,6 +26,7 @@ model = []
 
 input_pixel_range = (0, 1)  # pixel values are from 0 to 1
 learning_rate = 0.001
+dropout_rates = [0.2, 0.5] # 0.2 on input layer, 0.5 on hidden layer
 
 # Build the model without the output layer yet because it is not a Dense layer.
 # The number of outputs of one layer is the number of nodes of the next layer.
@@ -33,7 +34,8 @@ for i_layer in range(len(n_nodes) - 1):
     new_layer = layer.Dense(n_nodes[i_layer],
                             n_nodes[i_layer+1],
                             activation.Tanh,
-                            learning_rate=learning_rate)
+                            learning_rate=learning_rate,
+                            dropout_rate=dropout_rates[i_layer])
     new_layer.add_regularizer(L1())
     new_layer.add_regularizer(L2())
     new_layer.add_regularizer(Limit(1.0))

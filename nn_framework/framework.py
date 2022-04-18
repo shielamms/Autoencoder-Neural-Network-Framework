@@ -9,8 +9,8 @@ class ANN():
                  error_func=None,
                  visualizer=None):
         self.model = model
-        self.n_iter_train = int(1e8)
-        self.n_iter_evaluate = int(1e4)
+        self.n_iter_train = int(8e5)
+        self.n_iter_evaluate = int(2e5)
         self.input_pixel_range = input_pixel_range
 
         # reporting
@@ -51,8 +51,8 @@ class ANN():
         for i in range(self.n_iter_evaluate):
             x = next(evaluation_set()).ravel() # flatten the 2D input to 1D
             x = self.normalize(x)
-            y = self.forward_propagate(x)
-            error = self.error_func(x, y)
+            y = self.forward_propagate(x, is_evaluation=True)
+            error = self.error_func.calc(x, y)
             self.errors.append(error)
 
             if i % self.report_interval == 0:
@@ -74,10 +74,10 @@ class ANN():
         scale_factor = max_val - min_val
         return (transformed_values + 0.5) * (scale_factor + min_val)
 
-    def forward_propagate(self, x):
+    def forward_propagate(self, x, is_evaluation=False):
         y = x.ravel()[np.newaxis, :] # ravel(): flatten to a single row
         for layer in self.model:
-            y = layer.forward_propagate(y)
+            y = layer.forward_propagate(y, is_evaluation)
         return y.ravel()
 
     def forward_propagate_to_layer(self, x, i_layer):

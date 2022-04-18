@@ -1,7 +1,12 @@
 import numpy as np
 
 class Dense():
-    def __init__(self, m_inputs, n_outputs, activation, learning_rate=0.001):
+    def __init__(self,
+                 m_inputs,
+                 n_outputs,
+                 activation,
+                 learning_rate=0.001,
+                 dropout_rate=0):
         self.m_inputs = int(m_inputs)
         self.n_outputs = int(n_outputs)
 
@@ -14,11 +19,30 @@ class Dense():
         self.activation = activation
         self.learning_rate = learning_rate
         self.regularizers = []
+        self.dropout_rate = dropout_rate
+        self.i_dropout = None
 
     def add_regularizer(self, new_regularizer):
         self.regularizers.append(new_regularizer)
 
-    def forward_propagate(self, inputs):
+    def forward_propagate(self, inputs, is_evaluation=False):
+        if is_evaluation:
+            self.dropout_rate = 0
+
+        # Determine random nodes to drop out
+        self.i_dropout = np.zeros(self.x.size, dtype=bool)
+        random_dropout_idx = (
+                np.where(
+                    np.random.uniform(size=self.x.size) < self.dropout_rate
+        ))
+        self.i_dropout[random_dropout_idx] = True
+        # All dropout nodes get a value of 0, while remaining nodes will
+        # increase by a factor to compensate for the dropped nodes
+        self.x[:, self.i_dropout] = 0
+        self.x[:, np.logical_not(self.i_dropout)] *= (
+                                1 / (1 - self.dropout_rate))
+
+
         # Include the bias node in the forward propagation
         bias = np.ones((1,1))
         self.x = np.concatenate((inputs, bias), axis=1)
@@ -43,7 +67,9 @@ class Dense():
             self.weights = regularizer.update(self)
 
         de_dx = (de_dy * dy_dv) @ self.weights.transpose()
-        return de_dx[:,:-1]
+        # Do not backpropagate to the dropped out nodes
+        de_dx[:, self.i_dropout] = 0
+        return de_dx[:, :-1]
 
 
 
