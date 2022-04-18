@@ -9,6 +9,10 @@ class SqrErr():
     def calc_derivative(x):
         return 2 * x
 
+    @staticmethod
+    def __str__():
+        return 'Mean Squared Error'
+
 
 class AbsErr():
     @staticmethod
@@ -18,3 +22,7 @@ class AbsErr():
     @staticmethod
     def calc_derivative(x):
         return np.sign(x)
+
+    @staticmethod
+    def __str__():
+        return 'Mean Absolute Error'

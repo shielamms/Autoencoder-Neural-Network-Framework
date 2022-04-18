@@ -21,6 +21,7 @@ class ANN():
         self.report_max = 0
         self.report_path = 'reports'
         self.report_file = 'nn_performance_report.png'
+        self.parameter_report_file = 'nn_parameters.txt'
 
         self.error_func = error_func
         self.visualizer = visualizer
@@ -29,6 +30,8 @@ class ANN():
             os.mkdir(self.report_path)
         except Exception:
             pass
+
+        self.report_parameters()
 
 
     def train(self, training_set):
@@ -102,19 +105,6 @@ class ANN():
         # Return the output of the stop layer
         return layer.y.ravel()
 
-    # Implement all forward_propagate acitivities into a single function above
-    # def forward_propagate_to_layer(self, x, i_layer):
-    #     y = x.ravel()[np.newaxis, :] # ravel(): flatten to a single row
-    #     for layer in self.model[:i_layer]:
-    #         y = layer.forward_propagate(y)
-    #     return y.ravel()
-
-    # def forward_propagate_from_layer(self, x, i_layer):
-    #     y = x.ravel()[np.newaxis, :] # ravel(): flatten to a single row
-    #     for layer in self.model[i_layer:]:
-    #         y = layer.forward_propagate(y)
-    #     return y.ravel()
-
     def back_propagate(self, de_dy):
         self.model[-1].de_dy += de_dy
 
@@ -148,3 +138,26 @@ class ANN():
         ax.grid()
         fig.savefig(os.path.join(self.report_path, self.report_file))
         plt.close()
+
+    def __str__(self):
+        lines = [
+            'My Neural Network',
+            f'  training iterations: {self.n_iter_train}',
+            f'  evaluation iterations: {self.n_iter_evaluate}',
+            f'  error function: {self.error_func.__str__()}',
+        ]
+
+        for i, layer in enumerate(self.model):
+            lines.append(
+                f'  Layer {i}: {layer.__str__()} \n'
+            )
+
+        return '\n'.join(lines)
+
+    def report_parameters(self):
+        param_info = 'type: ' + self.__str__()
+
+        with open(
+            os.path.join(self.report_path, self.parameter_report_file), 'w'
+        ) as param_info_report:
+            param_info_report.write(param_info)

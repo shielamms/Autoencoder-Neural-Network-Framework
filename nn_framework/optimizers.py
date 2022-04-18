@@ -59,6 +59,14 @@ class SGD(GenericOptimizer):
 
         layer.weights -= de_dw_batch * self.learning_rate
 
+    def __str__(self):
+        lines = [
+            'Stochastic Gradient Descent',
+            f'    learning rate: {self.learning_rate}',
+            f'    minibatch size: {self.minibatch_size}'
+        ]
+        return '\n'.join(lines)
+
 
 class Momentum(GenericOptimizer):
     # Momentum takes bigger and bigger steps in a particular direction
@@ -82,6 +90,15 @@ class Momentum(GenericOptimizer):
         )
         layer.weights -= new_adjustment
         self.previous_adjustment = new_adjustment
+
+    def __str__(self):
+        lines = [
+            'Momentum',
+            f'    learning rate: {self.learning_rate}',
+            f'    minibatch size: {self.minibatch_size}',
+            f'    momentum amount: {self.momentum_amount}'
+        ]
+        return '\n'.join(lines)
 
 
 class Adam(GenericOptimizer):

@@ -24,6 +24,9 @@ class GenericLayer():
         self.de_dx = self.de_dy
         self.previous_layer.de_dy += self.de_dx
 
+    def __str__(self):
+        return 'Generic Layer'
+
 
 class Dense(GenericLayer):
     def __init__(self,
@@ -34,7 +37,6 @@ class Dense(GenericLayer):
                  optimizer=None,
                  dropout_rate=0,
                  ):
-        self.type = 'Dense'
         self.previous_layer = previous_layer
         self.n_outputs = int(n_outputs)
         self.m_inputs = self.previous_layer.y.size # infer number of input nodes
@@ -58,6 +60,22 @@ class Dense(GenericLayer):
 
         self.regularizers = []
         self.reset()
+
+    def __str__(self):
+        lines = [
+            'Dense (Fully Connected)',
+            f'  number of inputs: {self.m_inputs}',
+            f'  number of outputs: {self.n_outputs}',
+            f'  activation: {self.activation.__str__()}',
+            f'  initializer: {self.initializer.__str__()}',
+            f'  optimizer: {self.optimizer.__str__()}',
+        ]
+
+        for regularizer in self.regularizers:
+            lines.append(f'  regularizer: {regularizer.__str__()}')
+
+        return '\n'.join(lines)
+
 
     def reset(self):
         self.x = self.de_dx = np.zeros((1, self.m_inputs))
@@ -132,7 +150,6 @@ class Dense(GenericLayer):
 
 class RangeNormalization(GenericLayer):
     def __init__(self, training_data, previous_layer=None):
-        self.type = 'RangeNormalization'
         self.previous_layer = previous_layer
         self.range_min = 1e10
         self.range_max = -1e10
@@ -150,6 +167,14 @@ class RangeNormalization(GenericLayer):
         self.scale_factor = self.range_max - self.range_min
         self.size = sample.size
         self.reset()
+
+    def __str__(self):
+        lines = [
+            'Range Normalization',
+            f'  range minimum: {self.range_min}',
+            f'  range maximum: {self.range_max}',
+        ]
+        return '\n'.join(lines)
 
     def forward_propagate(self, **kwargs):
         if self.previous_layer is not None:
@@ -174,7 +199,6 @@ class Difference(GenericLayer):
     # This calculates the difference between the output of the first layer
     # and the output of the previous layer
     def __init__(self, previous_layer, diff_layer):
-        self.type = 'Difference'
         self.previous_layer = previous_layer
         self.diff_layer = diff_layer
 
@@ -182,6 +206,9 @@ class Difference(GenericLayer):
         assert self.previous_layer.y.size == self.diff_layer.y.size
 
         self.size = self.previous_layer.y.size
+
+    def __str__(self):
+        return 'Difference'
 
     def forward_propagate(self, **kwargs):
         self.y = self.previous_layer.y - self.diff_layer.y

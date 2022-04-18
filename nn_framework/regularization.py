@@ -23,6 +23,13 @@ class L1(GenericRegularizer):
     def pre_optim_update(self, layer):
         layer.de_dw += np.sign(layer.weights) * self.regularization_amount
 
+    def __str__(self):
+        lines = [
+            'L1 Regularizer',
+            f'    regularization amount: {self.regularization_amount}'
+        ]
+        return '\n'.join(lines)
+
 
 # Ridge Regularization
 class L2(GenericRegularizer):
@@ -34,6 +41,13 @@ class L2(GenericRegularizer):
 
     def pre_optim_update(self, layer):
         layer.de_dw += 2 * layer.weights * regularization_amount
+
+    def __str__(self):
+        lines = [
+            'L2 Regularizer',
+            f'    regularization amount: {self.regularization_amount}'
+        ]
+        return '\n'.join(lines)
 
 
 # Custom Regularizer
@@ -48,3 +62,10 @@ class Limit(GenericRegularizer):
         # values in between remain the same.
         layer.weights = np.minimum(self.weight_limit, layer.weights)
         layer.weights = np.maximum(-self.weight_limit, layer.weights)
+
+    def __str__(self):
+        lines = [
+            'Limit Regularizer',
+            f'    weight limit: {self.weight_limit}'
+        ]
+        return '\n'.join(lines)

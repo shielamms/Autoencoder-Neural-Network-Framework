@@ -10,6 +10,10 @@ class Tanh():
     def calc_derivative(value):
         return 1 - np.tanh(value)**2
 
+    @staticmethod
+    def __str__():
+        return 'Hyperbolic Tangent (Tanh)'
+
 
 class Logistic():
 
@@ -20,6 +24,10 @@ class Logistic():
     @staticmethod
     def calc_derivative(value):
         return calc(value) * (1 - calc(value))
+
+    @staticmethod
+    def __str__():
+        return 'Logistic'
 
 
 class ReLU():
@@ -34,3 +42,7 @@ class ReLU():
             return 1
         else:
             return 0
+
+    @staticmethod
+    def __str__():
+        return 'ReLU'

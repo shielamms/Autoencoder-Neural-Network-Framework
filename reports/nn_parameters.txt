@@ -1,0 +1,37 @@
+type: My Neural Network
+  training iterations: 800000
+  evaluation iterations: 200000
+  error function: Mean Squared Error
+  Layer 0: Range Normalization
+  range minimum: 0
+  range maximum: 1 
+
+  Layer 1: Dense (Fully Connected)
+  number of inputs: 49
+  number of outputs: 41
+  activation: Hyperbolic Tangent (Tanh)
+  initializer: Glorot
+  optimizer: Momentum
+    learning rate: 0.001
+    minibatch size: 1
+    momentum amount: 0.9
+  regularizer: L1 Regularizer
+    regularization amount: 0.01
+  regularizer: Limit Regularizer
+    weight limit: 4.0 
+
+  Layer 2: Dense (Fully Connected)
+  number of inputs: 41
+  number of outputs: 49
+  activation: Hyperbolic Tangent (Tanh)
+  initializer: Glorot
+  optimizer: Momentum
+    learning rate: 0.001
+    minibatch size: 1
+    momentum amount: 0.9
+  regularizer: L1 Regularizer
+    regularization amount: 0.01
+  regularizer: Limit Regularizer
+    weight limit: 4.0 
+
+  Layer 3: Difference 
